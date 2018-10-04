@@ -26,8 +26,8 @@ aREST rest = aREST(client);
 char * device_id = "fa3698";
 
 // WiFi parameters
-char ssid[] = "Flume-Pilot2";
-char password[] = "esponly1";
+char ssid[] = "beanpad2.0";
+char password[] = "twopeasinapod69";
 
 // Callback function for the cloud connection
 void callback(char* topic, byte* payload, unsigned int length);
@@ -70,6 +70,10 @@ void setup(void)
   Serial.println(ip);
   local_ip = ipToString(WiFi.localIP());
 
+  for( uint8_t i = 0; i < 8; i++ ) {
+    pinMode(i, OUTPUT);
+    digitalWrite(i, HIGH);
+  }
 }
 
 void loop() {
