@@ -120,6 +120,7 @@ String ipToString(IPAddress address)
 int openContainer(String command)
 {
   int container = command.toInt();
+  container--;
   if(container >= 0 && container < 8) {
     digitalWrite(container, LOW);
     delay(1000);
