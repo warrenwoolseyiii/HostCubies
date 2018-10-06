@@ -26,14 +26,15 @@ aREST rest = aREST(client);
 char * device_id = "fa3698";
 
 // WiFi parameters
-char ssid[] = "Flume-Pilot2";//"beanpad2.0";
-char password[] = "esponly1";//"twopeasinapod69";
+char ssid[] = "beanpad2.0";
+char password[] = "twopeasinapod69";
 
 // Callback function for the cloud connection
 void callback(char* topic, byte* payload, unsigned int length);
 
 // Function to open a container
 int openContainer(String command);
+int numRequests = 0;
 
 // The port to listen for incoming TCP connections
 #define LISTEN_PORT           80
@@ -51,6 +52,7 @@ void setup(void)
 
   // Functions for the REST API
   rest.function("container", openContainer);
+  rest.variable("numRequests", &numRequests);
 
   // Give name and ID to device (ID should be 6 characters long)
   rest.set_id(device_id);
@@ -121,6 +123,7 @@ int openContainer(String command)
 {
   int container = command.toInt();
   container--;
+  numRequests++;
   if(container >= 0 && container < 8) {
     digitalWrite(container, LOW);
     delay(1000);
