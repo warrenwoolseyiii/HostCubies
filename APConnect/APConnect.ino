@@ -1,6 +1,5 @@
 #include <SPI.h>
 #include <WiFi101.h>
-//#include <PubNub.h>
 
 char       apssid[] = "MKR1000AP";
 int        status = WL_IDLE_STATUS;
@@ -8,25 +7,10 @@ WiFiServer server( 80 );
 String     HTTP_req;
 boolean    readingNetwork = false;
 boolean    readingPassword = false;
-boolean    readingPubkey = false;
-boolean    readingSubkey = false;
-boolean    readingChannel = false;
 String     password = "";
 String     network = "";
-String     pubkey = "";
-String     subkey = "";
-String     channel = "";
 boolean    needCredentials = true;
 boolean    needWiFi = false;
-boolean    connectPubNub = false;
-
-char *strToChar( String str )
-{
-    int  len = str.length() + 1;
-    char c[len];
-    str.toCharArray( c, len );
-    return c;
-}
 
 void setup()
 {
@@ -58,9 +42,6 @@ void loop()
     if( needWiFi ) {
         getWiFi();
     }
-    // if( connectPubNub ) {
-    //    getPubNub();
-    //}
 }
 
 void getCredentials()
@@ -85,53 +66,19 @@ void getCredentials()
                 }
                 if( readingPassword ) {
                     if( c == ',' ) {
-                        readingPubkey = true;
-                        readingPassword = false;
-                    }
-                    else if( c != '!' ) {
-                        password += c;
-                    }
-                }
-                if( readingPubkey ) {
-                    if( c == '*' ) {
-                        readingSubkey = true;
-                        readingPubkey = false;
-                    }
-                    else if( c != ',' ) {
-                        pubkey += c;
-                    }
-                }
-                if( readingSubkey ) {
-                    if( c == '!' ) {
-                        readingChannel = true;
-                        readingSubkey = false;
-                    }
-                    else if( c != '*' ) {
-                        subkey += c;
-                    }
-                }
-                if( readingChannel ) {
-                    if( c == ',' ) {
                         Serial.println();
                         Serial.print( "Network Name: " );
                         Serial.println( network );
                         Serial.print( "Password: " );
                         Serial.println( password );
-                        Serial.print( "Publish Key: " );
-                        Serial.println( pubkey );
-                        Serial.print( "Subscribe Key: " );
-                        Serial.println( subkey );
-                        Serial.print( "Channel: " );
-                        Serial.println( channel );
                         Serial.println();
                         client.stop();
                         WiFi.end();
-                        readingChannel = false;
-                        needCredentials = false;
+                        readingPassword = false;
                         needWiFi = true;
                     }
                     else if( c != '!' ) {
-                        channel += c;
+                        password += c;
                     }
                 }
                 if( c == '\n' ) {
@@ -155,15 +102,6 @@ void getCredentials()
                         client.print( "PASSWORD: " );
                         client.print( "<input id=\"password\"/><br>" );
 
-                        client.println( "<h2>PUBNUB CREDENTIALS</h2>" );
-                        client.print( "PUBLISH KEY: " );
-                        client.print( "<input id=\"subkey\"/><br>" );
-                        client.print( "SUBSCRIBE KEY: " );
-                        client.print( "<input id=\"pubkey\"/><br>" );
-                        client.print( "CHANNEL: " );
-                        client.print( "<input id=\"channel\"/><br>" );
-                        client.print( "<br>" );
-
                         client.print( "<button type=\"button\" "
                                       "onclick=\"SendText()\">Enter</button>" );
                         client.println( "</body>" );
@@ -173,30 +111,19 @@ void getCredentials()
                         client.println( "var password = "
                                         "document.querySelector('#password')"
                                         ";" );
-                        client.println(
-                            "var pubkey = document.querySelector('#pubkey');" );
-                        client.println(
-                            "var subkey = document.querySelector('#subkey');" );
-                        client.println( "var channel = "
-                                        "document.querySelector('#channel');" );
-
                         client.println( "function SendText() {" );
                         client.println( "nocache=\"&nocache=\" + Math.random() "
                                         "* 1000000;" );
                         client.println( "var request =new XMLHttpRequest();" );
-                        client.println( "netText = \"&txt=\" + \"?\" + "
-                                        "network.value + \"!\" + "
-                                        "password.value + \",\" + pubkey.value "
-                                        "+ \"*\" + subkey.value + \"!\" + "
-                                        "channel.value + \",&end=end\";" );
+                        client.println(
+                            "netText = \"&txt=\" + \"?\" + "
+                            "network.value + \"!\" + "
+                            "password.value + \",\" + \",&end=end\";" );
                         client.println( "request.open(\"GET\", \"ajax_inputs\" "
                                         "+ netText + nocache, true);" );
                         client.println( "request.send(null)" );
                         client.println( "network.value=''" );
-                        client.println( "password.value=''" );
-                        client.println( "pubkey.value=''" );
-                        client.println( "subkey.value=''" );
-                        client.println( "channel.value=''}" );
+                        client.println( "password.value=''}" );
                         client.println( "</script>" );
                         client.println( "</html>" );
                         client.println();
@@ -224,9 +151,6 @@ void getWiFi()
         while( true )
             ;
     }
-    else if( subkey == "" or pubkey == "" or channel == "" ) {
-        Serial.println( "Invalid PubNub credentials" );
-    }
     while( WiFi.status() != WL_CONNECTED ) {
         Serial.print( "Wifi Status: " );
         Serial.println( WiFi.status() );
@@ -237,18 +161,8 @@ void getWiFi()
     Serial.println( "WiFi connection successful" );
     printWiFiStatus();
     needWiFi = false;
-    connectPubNub = true;
     delay( 1000 );
 }
-
-// void getPubNub()
-//{
-//    PubNub.begin( strToChar( pubkey ), strToChar( subkey ) );
-//    Serial.println( "PubNub connection established" );
-//    WiFiClient *client = PubNub.publish( strToChar( channel ),
-//                                         "{\"Arduino\":\"Hello World!\"}" );
-//    connectPubNub = false;
-//}
 
 void printWiFiStatus()
 {
