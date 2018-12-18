@@ -36,12 +36,12 @@ void setup()
 
 void loop()
 {
-    if( needCredentials ) {
-        getCredentials();
-    }
-    if( needWiFi ) {
-        getWiFi();
-    }
+    if( needCredentials ) getCredentials();
+
+    if( needWiFi ) getWiFi();
+
+    if( !needWiFi && !needCredentials )
+        if( WiFi.status() != WL_CONNECTED ) needWiFi = true;
 }
 
 void getCredentials()
@@ -151,6 +151,9 @@ void getWiFi()
         while( true )
             ;
     }
+    else
+        needCredentials = false;
+
     while( WiFi.status() != WL_CONNECTED ) {
         Serial.print( "Wifi Status: " );
         Serial.println( WiFi.status() );
