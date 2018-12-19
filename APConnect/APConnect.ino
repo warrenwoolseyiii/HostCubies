@@ -24,7 +24,7 @@ void setup()
     Serial.print( "Creating access point named: " );
     Serial.println( apssid );
 
-    if( WiFi.beginAP( apssid ) != WL_CONNECTED ) {
+    if( WiFi.beginAP( apssid ) != WL_AP_LISTENING ) {
         Serial.println( "Creating access point failed" );
     }
 
