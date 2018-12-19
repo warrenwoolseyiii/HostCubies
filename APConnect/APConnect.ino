@@ -1,5 +1,6 @@
 #include <SPI.h>
 #include <WiFi101.h>
+#include "WebPage.h"
 
 int        status = WL_IDLE_STATUS;
 WiFiServer server( 80 );
@@ -97,49 +98,7 @@ void getCredentials()
                 }
                 if( c == '\n' ) {
                     if( currentLine.length() == 0 ) {
-                        client.println( "HTTP/1.1 200 OK" );
-                        client.println( "Content-type:text/html" );
-                        client.println();
-                        client.println( "<html>" );
-                        client.println( "<head>" );
-                        client.println( "<style type=\"text/css\"> body "
-                                        "{font-family: sans-serif; "
-                                        "margin:50px; padding:20px; "
-                                        "line-height: 250% } </style>" );
-                        client.println( "<title>Arduino Setup</title>" );
-                        client.println( "</head>" );
-                        client.println( "<body>" );
-
-                        client.println( "<h2>WIFI CREDENTIALS</h2>" );
-                        client.print( "NETWORK NAME: " );
-                        client.print( "<input id=\"network\"/><br>" );
-                        client.print( "PASSWORD: " );
-                        client.print( "<input id=\"password\"/><br>" );
-
-                        client.print( "<button type=\"button\" "
-                                      "onclick=\"SendText()\">Enter</button>" );
-                        client.println( "</body>" );
-                        client.println( "<script>" );
-                        client.println( "var network = "
-                                        "document.querySelector('#network');" );
-                        client.println( "var password = "
-                                        "document.querySelector('#password')"
-                                        ";" );
-                        client.println( "function SendText() {" );
-                        client.println( "nocache=\"&nocache=\" + Math.random() "
-                                        "* 1000000;" );
-                        client.println( "var request =new XMLHttpRequest();" );
-                        client.println(
-                            "netText = \"&txt=\" + \"?\" + "
-                            "network.value + \"!\" + "
-                            "password.value + \",\" + \",&end=end\";" );
-                        client.println( "request.open(\"GET\", \"ajax_inputs\" "
-                                        "+ netText + nocache, true);" );
-                        client.println( "request.send(null)" );
-                        client.println( "network.value=''" );
-                        client.println( "password.value=''}" );
-                        client.println( "</script>" );
-                        client.println( "</html>" );
+                        client.println( webPageHTML );
                         client.println();
                         break;
                     }
