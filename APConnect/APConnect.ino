@@ -1,7 +1,6 @@
 #include <SPI.h>
 #include <WiFi101.h>
 
-char       apssid[] = "MKR1000AP";
 int        status = WL_IDLE_STATUS;
 WiFiServer server( 80 );
 String     HTTP_req;
@@ -11,37 +10,52 @@ String     password = "";
 String     network = "";
 boolean    needCredentials = true;
 boolean    needWiFi = false;
+boolean    needAP = true;
 
 void setup()
 {
     Serial.begin( 9600 );
-    Serial.println( "Access Point Web Server" );
-
-    if( WiFi.status() == WL_NO_SHIELD ) {
-        Serial.println( "WiFi shield not present" );
-    }
-
-    Serial.print( "Creating access point named: " );
-    Serial.println( apssid );
-
-    if( WiFi.beginAP( apssid ) != WL_AP_LISTENING ) {
-        Serial.println( "Creating access point failed" );
-    }
-
-    Serial.flush();
-    delay( 1000 );
-    server.begin();
-    printAPStatus();
 }
 
 void loop()
 {
-    if( needCredentials ) getCredentials();
+    if( needAP )
+        launchAP();
+    else {
+        if( needCredentials ) getCredentials();
 
-    if( needWiFi ) getWiFi();
+        if( needWiFi ) getWiFi();
 
-    if( !needWiFi && !needCredentials )
-        if( WiFi.status() != WL_CONNECTED ) needWiFi = true;
+        if( !needWiFi && !needCredentials )
+            if( WiFi.status() != WL_CONNECTED ) needWiFi = true;
+    }
+}
+
+void launchAP()
+{
+    char apssid[] = "HostCubbyAP";
+
+    needAP = true;
+    Serial.println( "Access Point Web Server" );
+
+    if( WiFi.status() == WL_NO_SHIELD )
+        Serial.println( "WiFi shield not present" );
+
+    Serial.print( "Creating access point named: " );
+    Serial.println( apssid );
+
+    if( WiFi.beginAP( apssid ) != WL_AP_LISTENING )
+        Serial.println( "Creating access point failed" );
+    else
+        needAP = false;
+
+    Serial.flush();
+    delay( 1000 );
+
+    if( !needAP ) {
+        server.begin();
+        printAPStatus();
+    }
 }
 
 void getCredentials()
