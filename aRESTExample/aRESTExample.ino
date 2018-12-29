@@ -14,6 +14,7 @@ String     network = "";
 boolean    needCredentials = true;
 boolean    needWiFi = false;
 boolean    needAP = true;
+int        numReconnects = 0;
 
 // aRest
 int          status = WL_IDLE_STATUS;
@@ -21,7 +22,7 @@ WiFiClient   wifiClient;
 PubSubClient client( wifiClient );
 String       local_ip = "";
 aREST        rest = aREST( client );
-char *       device_id = "efa123"; //"fa3698";
+char *       device_id = "fa3698";
 int          numRequests = 0;
 boolean      serverIsLive = false;
 
@@ -49,6 +50,7 @@ void setup( void )
     // Functions for the REST API
     rest.function( "container", openContainer );
     rest.variable( "numRequests", &numRequests );
+    rest.variable( "numReconnects", &numReconnects );
 
     // Give name and ID to device (ID should be 6 characters long)
     rest.set_id( device_id );
@@ -73,6 +75,7 @@ void loop()
             if( WiFi.status() != WL_CONNECTED ) {
                 needWiFi = true;
                 serverIsLive = false;
+                numReconnects++;
             }
         }
 
