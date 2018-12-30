@@ -1,10 +1,8 @@
 #include <SPI.h>
 #include <WiFi101.h>
-#include <PubSubClient.h>
-#include <aREST.h>
 #include "WebPage.h"
 
-// AP Connect
+int        status = WL_IDLE_STATUS;
 WiFiServer server( 80 );
 String     HTTP_req;
 boolean    readingNetwork = false;
@@ -14,52 +12,10 @@ String     network = "";
 boolean    needCredentials = true;
 boolean    needWiFi = false;
 boolean    needAP = true;
-int        numReconnects = 0;
 
-// aRest
-int          status = WL_IDLE_STATUS;
-WiFiClient   wifiClient;
-PubSubClient client( wifiClient );
-String       local_ip = "";
-aREST        rest = aREST( client );
-char *       device_id = "fa3698";
-int          numRequests = 0;
-boolean      serverIsLive = false;
-
-// Callback function for the cloud connection
-void callback( char *topic, byte *payload, unsigned int length );
-
-// Function to open a container
-int openContainer( String command );
-
-// AP functions
-void launchAP();
-void getCredentials();
-void getWiFi();
-void printWiFiStatus();
-void printAPStatus();
-
-void setup( void )
+void setup()
 {
-    // Start Serial
-    Serial.begin( 115200 );
-
-    // Set callback
-    client.setCallback( callback );
-
-    // Functions for the REST API
-    rest.function( "container", openContainer );
-    rest.variable( "numRequests", &numRequests );
-    rest.variable( "numReconnects", &numReconnects );
-
-    // Give name and ID to device (ID should be 6 characters long)
-    rest.set_id( device_id );
-    rest.set_name( "mkr1000" );
-
-    for( uint8_t i = 0; i < 8; i++ ) {
-        pinMode( i, OUTPUT );
-        digitalWrite( i, HIGH );
-    }
+    Serial.begin( 9600 );
 }
 
 void loop()
@@ -71,64 +27,9 @@ void loop()
 
         if( needWiFi ) getWiFi();
 
-        if( !needWiFi && !needCredentials ) {
-            if( WiFi.status() != WL_CONNECTED ) {
-                needWiFi = true;
-                serverIsLive = false;
-                numReconnects++;
-            }
-        }
-
-        if( !needWiFi && !needCredentials && !serverIsLive ) {
-            server.begin();
-            Serial.println( "Local server started on IP:" );
-            serverIsLive = true;
-        }
-        else if( serverIsLive ) {
-            // Connect to the cloud
-            rest.handle( client );
-
-            // Handle REST calls
-            WiFiClient localClient = server.available();
-            if( !localClient ) {
-                return;
-            }
-            while( !localClient.available() ) {
-                delay( 1 );
-            }
-            rest.handle( localClient );
-        }
+        if( !needWiFi && !needCredentials )
+            if( WiFi.status() != WL_CONNECTED ) needWiFi = true;
     }
-}
-
-// Handles message arrived on subscribed topic(s)
-void callback( char *topic, byte *payload, unsigned int length )
-{
-
-    // Handle
-    rest.handle_callback( client, topic, payload, length );
-}
-
-// Convert IP address to String
-String ipToString( IPAddress address )
-{
-    return String( address[0] ) + "." + String( address[1] ) + "." +
-           String( address[2] ) + "." + String( address[3] );
-}
-
-// Opens and closes a container
-int openContainer( String command )
-{
-    int container = command.toInt();
-    container--;
-    numRequests++;
-    if( container >= 0 && container < 8 ) {
-        digitalWrite( container, LOW );
-        delay( 1000 );
-        digitalWrite( container, HIGH );
-        return 1;
-    }
-    return 0;
 }
 
 void launchAP()
@@ -160,13 +61,13 @@ void launchAP()
 
 void getCredentials()
 {
-    WiFiClient wC = server.available();
-    if( wC ) {
+    WiFiClient client = server.available();
+    if( client ) {
         Serial.println( "new client" );
         String currentLine = "";
-        while( wC.connected() ) {
-            if( wC.available() ) {
-                char c = wC.read();
+        while( client.connected() ) {
+            if( client.available() ) {
+                char c = client.read();
                 Serial.print( c );
                 if( c == '?' ) readingNetwork = true;
                 if( readingNetwork ) {
@@ -186,7 +87,7 @@ void getCredentials()
                         Serial.print( "Password: " );
                         Serial.println( password );
                         Serial.println();
-                        wC.stop();
+                        client.stop();
                         WiFi.end();
                         readingPassword = false;
                         needWiFi = true;
@@ -197,8 +98,8 @@ void getCredentials()
                 }
                 if( c == '\n' ) {
                     if( currentLine.length() == 0 ) {
-                        wC.println( webPageHTML );
-                        wC.println();
+                        client.println( webPageHTML );
+                        client.println();
                         break;
                     }
                     else {
@@ -210,7 +111,7 @@ void getCredentials()
                 }
             }
         }
-        wC.stop();
+        client.stop();
         Serial.println( "client disconnected" );
         Serial.println();
     }

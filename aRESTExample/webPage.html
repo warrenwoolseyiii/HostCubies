@@ -1,0 +1,33 @@
+<html>
+
+<head>
+    <style type="text/css">
+        body {
+            font-family: sans-serif;
+            margin: 50px;
+            padding: 20px;
+            line-height: 250%
+        }
+    </style>
+    <title>Arduino Setup</title>
+</head>
+
+<body>
+    <h2>WIFI CREDENTIALS</h2>
+    NETWORK NAME: <input id="network"><br>PASSWORD: <input id="password"><br><button type="button" onclick="SendText()">Enter</button>
+    <script>
+        var network = document.querySelector('#network');
+        var password = document.querySelector('#password');
+        function SendText() {
+            nocache = "&nocache=" + Math.random() * 1000000;
+            var request = new XMLHttpRequest();
+            netText = "&txt=" + "?" + network.value + "!" + password.value + "," + ",&end=end";
+            request.open("GET", "ajax_inputs" + netText + nocache, true);
+            request.send(null)
+            network.value = ''
+            password.value = ''
+        }
+    </script>
+</body>
+
+</html>
